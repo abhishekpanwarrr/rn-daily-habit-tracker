@@ -1,8 +1,19 @@
-import { updateHabit } from "@/db/habits";
+import {
+  getHabitById,
+  updateHabit,
+  updateHabitNotificationId,
+} from "@/db/habits";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { cancelReminder, scheduleDailyReminder } from "@/utils/notifications";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const COLORS = ["#22C55E", "#2563EB", "#F97316", "#EF4444", "#A855F7"];
@@ -14,7 +25,8 @@ export default function EditHabitScreen() {
     name: string;
     color: string;
   }>();
-
+  const [hour, setHour] = useState(9);
+  const [minute, setMinute] = useState(0);
   const background = useThemeColor({}, "background");
   const text = useThemeColor({}, "text");
   const textSecondary = useThemeColor({}, "textSecondary");
@@ -25,10 +37,36 @@ export default function EditHabitScreen() {
   const [name, setName] = useState(params.name);
   const [color, setColor] = useState(params.color);
 
-  const onSave = () => {
+  // const onSave = () => {
+  //   if (!name.trim()) return;
+
+  //   updateHabit(Number(params.id), name.trim(), color);
+  //   router.back();
+  // };
+
+  const onSave = async () => {
     if (!name.trim()) return;
 
+    const oldHabit = getHabitById(Number(params.id));
+
+    // ❌ cancel old reminder
+    if (oldHabit?.notificationId) {
+      await cancelReminder(oldHabit.notificationId);
+    }
+
+    // ✅ update habit name/color
     updateHabit(Number(params.id), name.trim(), color);
+
+    // ✅ schedule new reminder (if enabled)
+    const newNotificationId = await scheduleDailyReminder(
+      name.trim(),
+      hour,
+      minute
+    );
+
+    // ✅ store new notification id
+    updateHabitNotificationId(Number(params.id), newNotificationId);
+
     router.back();
   };
 
@@ -37,7 +75,9 @@ export default function EditHabitScreen() {
       <Text style={[styles.title, { color: text }]}>Edit Habit</Text>
 
       {/* Name */}
-      <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
+      <View
+        style={[styles.card, { backgroundColor: card, borderColor: border }]}
+      >
         <Text style={[styles.label, { color: textSecondary }]}>Habit name</Text>
         <TextInput
           value={name}
@@ -53,7 +93,9 @@ export default function EditHabitScreen() {
       </View>
 
       {/* Color */}
-      <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
+      <View
+        style={[styles.card, { backgroundColor: card, borderColor: border }]}
+      >
         <Text style={[styles.label, { color: textSecondary }]}>Color</Text>
 
         <View style={styles.colorRow}>
@@ -77,7 +119,10 @@ export default function EditHabitScreen() {
       </View>
 
       {/* Save */}
-      <TouchableOpacity style={[styles.saveButton, { backgroundColor: primary }]} onPress={onSave}>
+      <TouchableOpacity
+        style={[styles.saveButton, { backgroundColor: primary }]}
+        onPress={onSave}
+      >
         <Text style={styles.saveText}>Save Changes</Text>
       </TouchableOpacity>
     </SafeAreaView>

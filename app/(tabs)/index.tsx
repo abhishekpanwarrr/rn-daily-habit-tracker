@@ -1,13 +1,21 @@
 import { useAppTheme } from "@/context/AppThemeContext";
 import { isHabitDoneToday, toggleHabitToday } from "@/db/habitLogs";
-import { deleteHabit, getHabits } from "@/db/habits";
+import { deleteHabit, getHabitById, getHabits } from "@/db/habits";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { cancelReminder } from "@/utils/notifications";
 import { getCurrentStreak } from "@/utils/streak";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TodayScreen() {
@@ -29,6 +37,7 @@ export default function TodayScreen() {
   const { theme, setTheme } = useAppTheme();
 
   const toggleTheme = () => {
+    // @ts-ignore
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
   useFocusEffect(
@@ -67,7 +76,9 @@ export default function TodayScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: background }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: background, paddingHorizontal: 16 }}
+    >
       <View style={[styles.headerRow, { backgroundColor: background }]}>
         <View>
           <Text style={[styles.title, { color: text }]}>Today</Text>
@@ -90,7 +101,9 @@ export default function TodayScreen() {
       </View>
 
       <View style={[styles.progressCard, { backgroundColor: card }]}>
-        <Text style={[styles.progressTitle, { color: text }]}>Today’s Progress</Text>
+        <Text style={[styles.progressTitle, { color: text }]}>
+          Today’s Progress
+        </Text>
 
         <Text style={{ color: textSecondary, marginBottom: 8 }}>
           {completedCount} of {habits.length} habits completed
@@ -103,7 +116,11 @@ export default function TodayScreen() {
               styles.progressFill,
               {
                 backgroundColor: primary,
-                width: `${habits.length === 0 ? 0 : (completedCount / habits.length) * 100}%`,
+                width: `${
+                  habits.length === 0
+                    ? 0
+                    : (completedCount / habits.length) * 100
+                }%`,
               },
             ]}
           />
@@ -130,7 +147,17 @@ export default function TodayScreen() {
                 toggleHabitToday(item.id);
                 setRefresh((v) => v + 1);
               }}
-              onLongPress={() => onLongPressHabit(item.id)}
+              onLongPress={async () => {
+                const habit = getHabitById(item.id);
+
+                if (habit?.notificationId) {
+                  await cancelReminder(habit.notificationId);
+                }
+
+                deleteHabit(item.id);
+                setRefresh((v) => v + 1);
+                onLongPressHabit(item.id);
+              }}
               style={[
                 styles.habitCard,
                 {
@@ -152,9 +179,13 @@ export default function TodayScreen() {
 
               {/* Text */}
               <View style={{ flex: 1 }}>
-                <Text style={[styles.habitName, { color: text }]}>{item.name}</Text>
+                <Text style={[styles.habitName, { color: text }]}>
+                  {item.name}
+                </Text>
                 <Text style={[styles.habitSub, { color: textSecondary }]}>
-                  {streak > 0 ? `🔥 ${streak} day streak` : "⏳ Start your streak today"}
+                  {streak > 0
+                    ? `🔥 ${streak} day streak`
+                    : "⏳ Start your streak today"}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -162,7 +193,9 @@ export default function TodayScreen() {
         }}
         ListEmptyComponent={
           <View style={[styles.emptyState, { backgroundColor: background }]}>
-            <Text style={[styles.emptyTitle, { color: text }]}>No habits yet</Text>
+            <Text style={[styles.emptyTitle, { color: text }]}>
+              No habits yet
+            </Text>
             <Text style={[styles.emptySub, { color: textSecondary }]}>
               Start with one small habit today
             </Text>
@@ -200,11 +233,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 16,
     marginBottom: 16,
-  },
-
-  themeButton: {
-    padding: 8,
-    borderRadius: 20,
   },
 
   title: {

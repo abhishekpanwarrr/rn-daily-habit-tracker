@@ -19,14 +19,28 @@ export const getHabits = (): Habit[] => {
 /**
  * Add a new habit
  */
-export const addHabit = (name: string, color: string, frequency: "daily" | "weekly") => {
-  const createdAt = new Date().toISOString();
+// export const addHabit = (name: string, color: string, frequency: "daily" | "weekly") => {
+//   const createdAt = new Date().toISOString();
 
-  db.runSync(
+//   db.runSync(
+//     `INSERT INTO habits (name, color, frequency, createdAt)
+//      VALUES (?, ?, ?, ?)`,
+//     [name, color, frequency, createdAt]
+//   );
+// };
+
+export const addHabit = (
+  name: string,
+  color: string,
+  frequency: string
+): number => {
+  const result = db.runSync(
     `INSERT INTO habits (name, color, frequency, createdAt)
      VALUES (?, ?, ?, ?)`,
-    [name, color, frequency, createdAt]
+    [name, color, frequency, new Date().toISOString()]
   );
+
+  return result.lastInsertRowId as number;
 };
 
 /**
@@ -42,5 +56,31 @@ export const deleteHabit = (id: number) => {
 };
 
 export const updateHabit = (id: number, name: string, color: string) => {
-  db.runSync(`UPDATE habits SET name = ?, color = ? WHERE id = ?`, [name, color, id]);
+  db.runSync(`UPDATE habits SET name = ?, color = ? WHERE id = ?`, [
+    name,
+    color,
+    id,
+  ]);
+};
+
+export const updateHabitNotificationId = (
+  habitId: number,
+  notificationId: string | null
+) => {
+  db.runSync(`UPDATE habits SET notificationId = ? WHERE id = ?`, [
+    notificationId,
+    habitId,
+  ]);
+};
+
+export const getHabitById = (habitId: number) => {
+  const result = db.getFirstSync(`SELECT * FROM habits WHERE id = ?`, [
+    habitId,
+  ]);
+
+  return result as any | null;
+};
+
+export const clearHabitNotificationId = (habitId: number) => {
+  db.runSync(`UPDATE habits SET notificationId = NULL WHERE id = ?`, [habitId]);
 };

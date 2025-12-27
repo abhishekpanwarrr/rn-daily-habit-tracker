@@ -1,8 +1,16 @@
 import { deleteHabit, getHabits, Habit } from "@/db/habits";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import * as Haptics from "expo-haptics";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HabitsScreen() {
@@ -21,17 +29,21 @@ export default function HabitsScreen() {
   );
 
   const onLongPressHabit = (habitId: number) => {
-    Alert.alert("Delete habit?", "This will remove the habit and all its history.", [
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          deleteHabit(habitId);
-          setHabits(getHabits());
+    Alert.alert(
+      "Delete habit?",
+      "This will remove the habit and all its history.",
+      [
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteHabit(habitId);
+            setHabits(getHabits());
+          },
         },
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
   };
 
   return (
@@ -39,7 +51,9 @@ export default function HabitsScreen() {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: background }]}>
         <Text style={[styles.title, { color: text }]}>Habits</Text>
-        <Text style={[styles.subtitle, { color: textSecondary }]}>Manage your habits</Text>
+        <Text style={[styles.subtitle, { color: textSecondary }]}>
+          Manage your habits
+        </Text>
       </View>
 
       {/* Habit List */}
@@ -53,7 +67,8 @@ export default function HabitsScreen() {
         }}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() =>
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               router.push({
                 pathname: "/habit/edit",
                 params: {
@@ -61,10 +76,13 @@ export default function HabitsScreen() {
                   name: item.name,
                   color: item.color,
                 },
-              })
-            }
+              });
+            }}
             onLongPress={() => onLongPressHabit(item.id)}
-            style={[styles.habitCard, { backgroundColor: card, borderColor: border }]}
+            style={[
+              styles.habitCard,
+              { backgroundColor: card, borderColor: border },
+            ]}
           >
             <View style={[styles.colorDot, { backgroundColor: item.color }]} />
             <Text style={[styles.habitName, { color: text }]}>{item.name}</Text>
@@ -72,7 +90,9 @@ export default function HabitsScreen() {
         )}
         ListEmptyComponent={
           <View style={[styles.emptyState, { backgroundColor: background }]}>
-            <Text style={[styles.emptyTitle, { color: text }]}>No habits yet</Text>
+            <Text style={[styles.emptyTitle, { color: text }]}>
+              No habits yet
+            </Text>
             <Text style={[styles.emptySub, { color: textSecondary }]}>
               Add your first habit from the + button
             </Text>
