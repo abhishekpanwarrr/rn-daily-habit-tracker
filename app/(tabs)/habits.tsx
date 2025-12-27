@@ -13,7 +13,6 @@ export default function HabitsScreen() {
   const textSecondary = useThemeColor({}, "textSecondary");
   const card = useThemeColor({}, "card");
   const border = useThemeColor({}, "border");
-  const primary = useThemeColor({}, "primary");
 
   useFocusEffect(
     useCallback(() => {
@@ -38,7 +37,7 @@ export default function HabitsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: background }]}>
         <Text style={[styles.title, { color: text }]}>Habits</Text>
         <Text style={[styles.subtitle, { color: textSecondary }]}>Manage your habits</Text>
       </View>
@@ -47,6 +46,11 @@ export default function HabitsScreen() {
       <FlatList
         data={habits}
         keyExtractor={(item) => item.id.toString()}
+        style={{ backgroundColor: background }}
+        contentContainerStyle={{
+          backgroundColor: background,
+          paddingBottom: 24,
+        }}
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() =>
@@ -67,7 +71,7 @@ export default function HabitsScreen() {
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState, { backgroundColor: background }]}>
             <Text style={[styles.emptyTitle, { color: text }]}>No habits yet</Text>
             <Text style={[styles.emptySub, { color: textSecondary }]}>
               Add your first habit from the + button
@@ -84,7 +88,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-
   header: {
     marginTop: 16,
     marginBottom: 16,

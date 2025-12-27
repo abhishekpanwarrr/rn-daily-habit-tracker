@@ -10,8 +10,6 @@ const COLORS = ["#22C55E", "#2563EB", "#F97316", "#EF4444", "#A855F7"];
 
 export default function AddHabitScreen() {
   const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [hour, setHour] = useState(9);
-  const [minute, setMinute] = useState(0);
 
   const router = useRouter();
 
@@ -58,7 +56,14 @@ export default function AddHabitScreen() {
           placeholderTextColor={textSecondary}
           value={name}
           onChangeText={setName}
-          style={[styles.input, { color: text }]}
+          style={[
+            styles.input,
+            {
+              color: text,
+              backgroundColor: background,
+            },
+          ]}
+          selectionColor={primary}
         />
       </View>
 
@@ -84,8 +89,17 @@ export default function AddHabitScreen() {
         </View>
       </View>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
-        <TouchableOpacity onPress={() => setReminderEnabled((v) => !v)}>
-          <Text style={{ color: text }}>
+        <TouchableOpacity
+          onPress={() => setReminderEnabled((v) => !v)}
+          style={[
+            styles.card,
+            {
+              backgroundColor: card,
+              borderColor: border,
+            },
+          ]}
+        >
+          <Text style={{ color: text, fontWeight: "500" }}>
             {reminderEnabled ? "🔔 Daily reminder enabled" : "🔕 No reminder"}
           </Text>
           <Text style={{ color: textSecondary, marginTop: 4 }}>
@@ -128,7 +142,8 @@ const styles = StyleSheet.create({
 
   input: {
     fontSize: 16,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingLeft: 6,
   },
 
   colorRow: {
@@ -142,14 +157,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 12,
   },
-
   saveButton: {
     marginTop: "auto",
     padding: 16,
     borderRadius: 16,
     alignItems: "center",
+    elevation: 2,
   },
-
   saveText: {
     color: "#FFFFFF",
     fontSize: 16,

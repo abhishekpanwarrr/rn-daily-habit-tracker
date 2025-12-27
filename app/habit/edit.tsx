@@ -39,7 +39,17 @@ export default function EditHabitScreen() {
       {/* Name */}
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <Text style={[styles.label, { color: textSecondary }]}>Habit name</Text>
-        <TextInput value={name} onChangeText={setName} style={[styles.input, { color: text }]} />
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          style={[
+            styles.input,
+            {
+              color: text,
+              backgroundColor: background,
+            },
+          ]}
+        />
       </View>
 
       {/* Color */}
@@ -100,7 +110,8 @@ const styles = StyleSheet.create({
 
   input: {
     fontSize: 16,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingLeft: 6,
   },
 
   colorRow: {
@@ -120,6 +131,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignItems: "center",
+    elevation: 2,
   },
 
   saveText: {

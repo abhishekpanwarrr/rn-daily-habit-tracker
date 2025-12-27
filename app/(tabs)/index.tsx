@@ -1,12 +1,19 @@
+import { useAppTheme } from "@/context/AppThemeContext";
 import { isHabitDoneToday, toggleHabitToday } from "@/db/habitLogs";
 import { deleteHabit, getHabits } from "@/db/habits";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { getCurrentStreak } from "@/utils/streak";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function TodayScreen() {
+  const background = useThemeColor({}, "background");
+  const surface = useThemeColor({}, "card");
+
   const [habits, setHabits] = useState<any[]>([]);
   const [refresh, setRefresh] = useState(0);
   // Theme colors
@@ -18,6 +25,12 @@ export default function TodayScreen() {
   const primary = useThemeColor({}, "primary");
   // Router
   const router = useRouter();
+
+  const { theme, setTheme } = useAppTheme();
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
   useFocusEffect(
     useCallback(() => {
       const data = getHabits();
@@ -54,18 +67,28 @@ export default function TodayScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: text }]}>Today</Text>
-        <Text style={[styles.subtitle, { color: textSecondary }]}>{new Date().toDateString()}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: background }}>
+      <View style={[styles.headerRow, { backgroundColor: background }]}>
+        <View>
+          <Text style={[styles.title, { color: text }]}>Today</Text>
+          <Text style={[styles.subtitle, { color: textSecondary }]}>
+            {new Date().toDateString()}
+          </Text>
+        </View>
+
+        {/* Theme Toggle */}
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={[styles.themeButton, { backgroundColor: surface }]}
+        >
+          <Ionicons
+            name={theme === "dark" ? "sunny-outline" : "moon-outline"}
+            size={22}
+            color={text}
+          />
+        </TouchableOpacity>
       </View>
-      {/* PROGRESS CARD */}
-      {/* <View style={[styles.progressCard, { backgroundColor: card }]}>
-        <Text style={[styles.progressTitle, { color: text }]}>Today’s Progress</Text>
-        <Text style={{ color: textSecondary }}>
-          {completedCount} of {habits.length} habits completed
-        </Text>
-      </View> */}
+
       <View style={[styles.progressCard, { backgroundColor: card }]}>
         <Text style={[styles.progressTitle, { color: text }]}>Today’s Progress</Text>
 
@@ -89,9 +112,13 @@ export default function TodayScreen() {
 
       {/* HABIT LIST */}
       <FlatList
+        style={{ backgroundColor: background }}
+        contentContainerStyle={{
+          paddingBottom: 100,
+          backgroundColor: background,
+        }}
         data={habits}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 100 }}
         renderItem={({ item }) => {
           const done = isHabitDoneToday(item.id);
           const streak = getCurrentStreak(item.id);
@@ -99,6 +126,7 @@ export default function TodayScreen() {
           return (
             <TouchableOpacity
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 toggleHabitToday(item.id);
                 setRefresh((v) => v + 1);
               }}
@@ -133,7 +161,7 @@ export default function TodayScreen() {
           );
         }}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState, { backgroundColor: background }]}>
             <Text style={[styles.emptyTitle, { color: text }]}>No habits yet</Text>
             <Text style={[styles.emptySub, { color: textSecondary }]}>
               Start with one small habit today
@@ -157,10 +185,26 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-
+  themeButton: {
+    padding: 8,
+    borderRadius: 20,
+    elevation: 1,
+  },
   header: {
     marginTop: 16,
     marginBottom: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 16,
+    marginBottom: 16,
+  },
+
+  themeButton: {
+    padding: 8,
+    borderRadius: 20,
   },
 
   title: {
