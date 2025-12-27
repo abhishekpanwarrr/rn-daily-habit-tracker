@@ -1,22 +1,11 @@
-import {
-  getHabitById,
-  updateHabit,
-  updateHabitNotificationId,
-} from "@/db/habits";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { getHabitById, updateHabit, updateHabitNotificationId } from "@/db/habits";
+import { useTheme } from "@/hooks/useTheme";
+import { COLORS } from "@/utils/extra";
 import { cancelReminder, scheduleDailyReminder } from "@/utils/notifications";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const COLORS = ["#22C55E", "#2563EB", "#F97316", "#EF4444", "#A855F7"];
 
 export default function EditHabitScreen() {
   const router = useRouter();
@@ -25,24 +14,13 @@ export default function EditHabitScreen() {
     name: string;
     color: string;
   }>();
-  const [hour, setHour] = useState(9);
-  const [minute, setMinute] = useState(0);
-  const background = useThemeColor({}, "background");
-  const text = useThemeColor({}, "text");
-  const textSecondary = useThemeColor({}, "textSecondary");
-  const card = useThemeColor({}, "card");
-  const border = useThemeColor({}, "border");
-  const primary = useThemeColor({}, "primary");
+
+  const hour = 9;
+  const minute = 0;
+  const { colors } = useTheme();
 
   const [name, setName] = useState(params.name);
   const [color, setColor] = useState(params.color);
-
-  // const onSave = () => {
-  //   if (!name.trim()) return;
-
-  //   updateHabit(Number(params.id), name.trim(), color);
-  //   router.back();
-  // };
 
   const onSave = async () => {
     if (!name.trim()) return;
@@ -58,11 +36,7 @@ export default function EditHabitScreen() {
     updateHabit(Number(params.id), name.trim(), color);
 
     // ✅ schedule new reminder (if enabled)
-    const newNotificationId = await scheduleDailyReminder(
-      name.trim(),
-      hour,
-      minute
-    );
+    const newNotificationId = await scheduleDailyReminder(name.trim(), hour, minute);
 
     // ✅ store new notification id
     updateHabitNotificationId(Number(params.id), newNotificationId);
@@ -71,34 +45,31 @@ export default function EditHabitScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: background }]}>
-      <Text style={[styles.title, { color: text }]}>Edit Habit</Text>
-
-      {/* Name */}
-      <View
-        style={[styles.card, { backgroundColor: card, borderColor: border }]}
-      >
-        <Text style={[styles.label, { color: textSecondary }]}>Habit name</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Habit name</Text>
         <TextInput
           value={name}
           onChangeText={setName}
           style={[
             styles.input,
             {
-              color: text,
-              backgroundColor: background,
+              color: colors.text,
+              backgroundColor: colors.background,
             },
           ]}
         />
       </View>
 
       {/* Color */}
-      <View
-        style={[styles.card, { backgroundColor: card, borderColor: border }]}
-      >
-        <Text style={[styles.label, { color: textSecondary }]}>Color</Text>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
 
-        <View style={styles.colorRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.colorRow}
+        >
           {COLORS.map((c) => {
             return (
               <TouchableOpacity
@@ -109,18 +80,18 @@ export default function EditHabitScreen() {
                   {
                     backgroundColor: c,
                     borderWidth: color === c ? 3 : 0,
-                    borderColor: primary,
+                    borderColor: colors.primary,
                   },
                 ]}
               />
             );
           })}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Save */}
       <TouchableOpacity
-        style={[styles.saveButton, { backgroundColor: primary }]}
+        style={[styles.saveButton, { backgroundColor: colors.primary }]}
         onPress={onSave}
       >
         <Text style={styles.saveText}>Save Changes</Text>
@@ -134,13 +105,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 20,
-  },
-
   card: {
     borderRadius: 16,
     padding: 16,
@@ -162,6 +126,7 @@ const styles = StyleSheet.create({
   colorRow: {
     flexDirection: "row",
     marginTop: 8,
+    paddingHorizontal: 4,
   },
 
   colorDot: {

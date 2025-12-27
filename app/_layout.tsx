@@ -1,8 +1,9 @@
-import { AppTheme, AppThemeContext, THEME_STORAGE_KEY } from "@/context/AppThemeContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { initializeDatabase } from "@/db/database";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { useTheme } from "@/hooks/useTheme";
+// import { useColorScheme } from "@/hooks/use-color-scheme";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -14,47 +15,17 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const systemScheme = useColorScheme();
   const [dbReady, setDbReady] = useState(false);
-  // 🔥 GLOBAL THEME STATE
-  const [theme, setThemeState] = useState<AppTheme>("system");
-  const [themeReady, setThemeReady] = useState(false);
-  const effectiveScheme = theme === "system" ? systemScheme : theme;
-
-  const setTheme = async (value: AppTheme | ((prev: AppTheme) => AppTheme)) => {
-    setThemeState((prev) => {
-      const nextTheme = typeof value === "function" ? value(prev) : value;
-
-      AsyncStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-
-      return nextTheme;
-    });
-  };
-
   useEffect(() => {
-    if (!themeReady) return;
-
     try {
-      initializeDatabase(); // sync call
+      initializeDatabase();
       setDbReady(true);
     } catch (e) {
       console.error("Database initialization failed", e);
     }
-  }, [themeReady]);
-
-  useEffect(() => {
-    const loadTheme = async () => {
-      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "system") {
-        setThemeState(savedTheme);
-      }
-      setThemeReady(true);
-    };
-
-    loadTheme();
   }, []);
-  // ⛔ BLOCK UI UNTIL DB EXISTS
-  if (!dbReady || !themeReady) {
+
+  if (!dbReady) {
     return (
       <View
         style={{
@@ -67,44 +38,50 @@ export default function RootLayout() {
       </View>
     );
   }
+  return (
+    <ThemeProvider>
+      <RootNavigation />
+    </ThemeProvider>
+  );
+}
+
+function RootNavigation() {
+  const { theme } = useTheme();
 
   return (
-    <AppThemeContext.Provider value={{ theme, setTheme }}>
-      <ThemeProvider value={effectiveScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="habit/add"
-            options={{
-              presentation: "modal",
-              title: "Add new habit",
-              headerStyle: {
-                backgroundColor: effectiveScheme === "dark" ? "#0F172A" : "#F9FAFB",
-              },
-              headerTintColor: effectiveScheme === "dark" ? "#F8FAFC" : "#111827",
-              headerTitleStyle: {
-                fontWeight: "600",
-              },
-            }}
-          />
-          <Stack.Screen
-            name="habit/edit"
-            options={{
-              presentation: "modal",
-              title: "Edit habit",
-              headerStyle: {
-                backgroundColor: effectiveScheme === "dark" ? "#0F172A" : "#F9FAFB",
-              },
-              headerTintColor: effectiveScheme === "dark" ? "#F8FAFC" : "#111827",
-              headerTitleStyle: {
-                fontWeight: "600",
-              },
-            }}
-          />
-          <Stack.Screen name="settings" options={{ title: "Settings" }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AppThemeContext.Provider>
+    <>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+        <Stack.Screen
+          name="habit/add"
+          options={{
+            presentation: "modal",
+            title: "Add new habit",
+            headerStyle: {
+              backgroundColor: theme === "dark" ? "#0F172A" : "#F9FAFB",
+            },
+            headerTintColor: theme === "dark" ? "#F8FAFC" : "#111827",
+            headerTitleStyle: { fontWeight: "600" },
+          }}
+        />
+
+        <Stack.Screen
+          name="habit/edit"
+          options={{
+            presentation: "modal",
+            title: "Edit habit",
+            headerStyle: {
+              backgroundColor: theme === "dark" ? "#0F172A" : "#F9FAFB",
+            },
+            headerTintColor: theme === "dark" ? "#F8FAFC" : "#111827",
+            headerTitleStyle: { fontWeight: "600" },
+          }}
+        />
+
+        <Stack.Screen name="settings" options={{ title: "Settings" }} />
+      </Stack>
+      <StatusBar style={theme === "dark" ? "light" : "dark"} />
+    </>
   );
 }

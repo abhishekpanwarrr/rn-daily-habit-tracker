@@ -1,27 +1,15 @@
 import { deleteHabit, getHabits, Habit } from "@/db/habits";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useTheme } from "@/hooks/useTheme";
 import * as Haptics from "expo-haptics";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const router = useRouter();
-  const background = useThemeColor({}, "background");
-  const text = useThemeColor({}, "text");
-  const textSecondary = useThemeColor({}, "textSecondary");
-  const card = useThemeColor({}, "card");
-  const border = useThemeColor({}, "border");
-
+  const { colors, toggleTheme, theme } = useTheme();
   useFocusEffect(
     useCallback(() => {
       setHabits(getHabits());
@@ -29,40 +17,34 @@ export default function HabitsScreen() {
   );
 
   const onLongPressHabit = (habitId: number) => {
-    Alert.alert(
-      "Delete habit?",
-      "This will remove the habit and all its history.",
-      [
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteHabit(habitId);
-            setHabits(getHabits());
-          },
+    Alert.alert("Delete habit?", "This will remove the habit and all its history.", [
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteHabit(habitId);
+          setHabits(getHabits());
         },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: background }]}>
-        <Text style={[styles.title, { color: text }]}>Habits</Text>
-        <Text style={[styles.subtitle, { color: textSecondary }]}>
-          Manage your habits
-        </Text>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Habits</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your habits</Text>
       </View>
 
       {/* Habit List */}
       <FlatList
         data={habits}
         keyExtractor={(item) => item.id.toString()}
-        style={{ backgroundColor: background }}
+        style={{ backgroundColor: colors.background }}
         contentContainerStyle={{
-          backgroundColor: background,
+          backgroundColor: colors.background,
           paddingBottom: 24,
         }}
         renderItem={({ item }) => (
@@ -79,26 +61,27 @@ export default function HabitsScreen() {
               });
             }}
             onLongPress={() => onLongPressHabit(item.id)}
-            style={[
-              styles.habitCard,
-              { backgroundColor: card, borderColor: border },
-            ]}
+            style={[styles.habitCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           >
             <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-            <Text style={[styles.habitName, { color: text }]}>{item.name}</Text>
+            <Text style={[styles.habitName, { color: colors.text }]}>{item.name}</Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <View style={[styles.emptyState, { backgroundColor: background }]}>
-            <Text style={[styles.emptyTitle, { color: text }]}>
-              No habits yet
-            </Text>
-            <Text style={[styles.emptySub, { color: textSecondary }]}>
+          <View style={[styles.emptyState, { backgroundColor: colors.background }]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No habits yet</Text>
+            <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
               Add your first habit from the + button
             </Text>
           </View>
         }
       />
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.primary }]}
+        onPress={() => router.push("/habit/add")}
+      >
+        <Text style={styles.fabText}>＋</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -157,5 +140,23 @@ const styles = StyleSheet.create({
 
   emptySub: {
     fontSize: 14,
+  },
+
+  fab: {
+    position: "absolute",
+    right: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+  },
+
+  fabText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    lineHeight: 28,
   },
 });

@@ -1,13 +1,12 @@
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useTheme } from "@/hooks/useTheme";
 import { Tabs } from "expo-router";
 
 export default function TabLayout() {
-  const background = useThemeColor({}, "background");
-  const border = useThemeColor({}, "border");
-  const text = useThemeColor({}, "text");
-  const primary = useThemeColor({}, "primary");
+  const {
+    colors: { background, border, primary, text },
+  } = useTheme();
   return (
     <Tabs
       screenOptions={{

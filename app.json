@@ -10,16 +10,15 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.panwar.dailyhabittracker"
+      "bundleIdentifier": "com.panwar.habito"
     },
     "android": {
-      "package": "com.panwar.dailyhabittracker",
+      "package": "com.panwar.habito",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#E6F4FE"
       },
       "versionCode": 1,
-      "useNextNotificationsApi": true,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -50,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "45eb20b6-72a7-4324-a234-7450a4981c51"
+      }
     }
   }
 }

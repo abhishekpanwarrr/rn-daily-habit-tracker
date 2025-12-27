@@ -1,45 +1,24 @@
-import { useAppTheme } from "@/context/AppThemeContext";
 import { isHabitDoneToday, toggleHabitToday } from "@/db/habitLogs";
 import { deleteHabit, getHabitById, getHabits } from "@/db/habits";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useTheme } from "@/hooks/useTheme";
 import { cancelReminder } from "@/utils/notifications";
 import { getCurrentStreak } from "@/utils/streak";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TodayScreen() {
-  const background = useThemeColor({}, "background");
-  const surface = useThemeColor({}, "card");
-
+  const { colors, toggleTheme, theme } = useTheme();
   const [habits, setHabits] = useState<any[]>([]);
   const [refresh, setRefresh] = useState(0);
-  // Theme colors
-  const text = useThemeColor({}, "text");
-  const textSecondary = useThemeColor({}, "textSecondary");
-  const card = useThemeColor({}, "card");
-  const completedCard = useThemeColor({}, "completedCard");
-  const border = useThemeColor({}, "border");
-  const primary = useThemeColor({}, "primary");
-  // Router
+
   const router = useRouter();
 
-  const { theme, setTheme } = useAppTheme();
+  const completedCount = habits.filter((h) => isHabitDoneToday(h.id)).length;
 
-  const toggleTheme = () => {
-    // @ts-ignore
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
   useFocusEffect(
     useCallback(() => {
       const data = getHabits();
@@ -50,8 +29,6 @@ export default function TodayScreen() {
     const data = getHabits();
     setHabits(data);
   }, [refresh]);
-
-  const completedCount = habits.filter((h) => isHabitDoneToday(h.id)).length;
 
   const onLongPressHabit = (habitId: number) => {
     Alert.alert(
@@ -76,13 +53,11 @@ export default function TodayScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: background, paddingHorizontal: 16 }}
-    >
-      <View style={[styles.headerRow, { backgroundColor: background }]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingHorizontal: 16 }}>
+      <View style={[styles.headerRow, { backgroundColor: colors.background }]}>
         <View>
-          <Text style={[styles.title, { color: text }]}>Today</Text>
-          <Text style={[styles.subtitle, { color: textSecondary }]}>
+          <Text style={[styles.title, { color: colors.text }]}>Today</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {new Date().toDateString()}
           </Text>
         </View>
@@ -90,37 +65,31 @@ export default function TodayScreen() {
         {/* Theme Toggle */}
         <TouchableOpacity
           onPress={toggleTheme}
-          style={[styles.themeButton, { backgroundColor: surface }]}
+          style={[styles.themeButton, { backgroundColor: colors.background }]}
         >
           <Ionicons
             name={theme === "dark" ? "sunny-outline" : "moon-outline"}
             size={22}
-            color={text}
+            color={colors.text}
           />
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.progressCard, { backgroundColor: card }]}>
-        <Text style={[styles.progressTitle, { color: text }]}>
-          Today’s Progress
-        </Text>
+      <View style={[styles.progressCard, { backgroundColor: colors.card }]}>
+        <Text style={[styles.progressTitle, { color: colors.text }]}>Today’s Progress</Text>
 
-        <Text style={{ color: textSecondary, marginBottom: 8 }}>
+        <Text style={{ color: colors.text, marginBottom: 8 }}>
           {completedCount} of {habits.length} habits completed
         </Text>
 
         {/* Progress Bar */}
-        <View style={[styles.progressTrack, { backgroundColor: border }]}>
+        <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
           <View
             style={[
               styles.progressFill,
               {
-                backgroundColor: primary,
-                width: `${
-                  habits.length === 0
-                    ? 0
-                    : (completedCount / habits.length) * 100
-                }%`,
+                backgroundColor: colors.primary,
+                width: `${habits.length === 0 ? 0 : (completedCount / habits.length) * 100}%`,
               },
             ]}
           />
@@ -129,10 +98,10 @@ export default function TodayScreen() {
 
       {/* HABIT LIST */}
       <FlatList
-        style={{ backgroundColor: background }}
+        style={{ backgroundColor: colors.background }}
         contentContainerStyle={{
           paddingBottom: 100,
-          backgroundColor: background,
+          backgroundColor: colors.background,
         }}
         data={habits}
         keyExtractor={(item) => item.id.toString()}
@@ -161,8 +130,8 @@ export default function TodayScreen() {
               style={[
                 styles.habitCard,
                 {
-                  backgroundColor: done ? completedCard : card,
-                  borderColor: border,
+                  backgroundColor: done ? colors.completedCard : colors.card,
+                  borderColor: colors.border,
                 },
               ]}
             >
@@ -179,24 +148,18 @@ export default function TodayScreen() {
 
               {/* Text */}
               <View style={{ flex: 1 }}>
-                <Text style={[styles.habitName, { color: text }]}>
-                  {item.name}
-                </Text>
-                <Text style={[styles.habitSub, { color: textSecondary }]}>
-                  {streak > 0
-                    ? `🔥 ${streak} day streak`
-                    : "⏳ Start your streak today"}
+                <Text style={[styles.habitName, { color: colors.text }]}>{item.name}</Text>
+                <Text style={[styles.habitSub, { color: colors.textSecondary }]}>
+                  {streak > 0 ? `🔥 ${streak} day streak` : "⏳ Start your streak today"}
                 </Text>
               </View>
             </TouchableOpacity>
           );
         }}
         ListEmptyComponent={
-          <View style={[styles.emptyState, { backgroundColor: background }]}>
-            <Text style={[styles.emptyTitle, { color: text }]}>
-              No habits yet
-            </Text>
-            <Text style={[styles.emptySub, { color: textSecondary }]}>
+          <View style={[styles.emptyState, { backgroundColor: colors.background }]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No habits yet</Text>
+            <Text style={[styles.emptySub, { color: colors.econdary }]}>
               Start with one small habit today
             </Text>
           </View>
@@ -204,7 +167,7 @@ export default function TodayScreen() {
       />
       {/* FAB (Add Habit – wired later) */}
       <TouchableOpacity
-        style={[styles.fab, { backgroundColor: primary }]}
+        style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => router.push("/habit/add")}
       >
         <Text style={styles.fabText}>＋</Text>
