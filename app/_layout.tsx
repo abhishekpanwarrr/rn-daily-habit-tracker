@@ -21,20 +21,27 @@ export default function RootLayout() {
   const [themeReady, setThemeReady] = useState(false);
   const effectiveScheme = theme === "system" ? systemScheme : theme;
 
-  const setTheme = async (newTheme: AppTheme) => {
-    setThemeState(newTheme);
-    await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
+  const setTheme = async (value: AppTheme | ((prev: AppTheme) => AppTheme)) => {
+    setThemeState((prev) => {
+      const nextTheme = typeof value === "function" ? value(prev) : value;
+
+      AsyncStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+
+      return nextTheme;
+    });
   };
 
   useEffect(() => {
     if (!themeReady) return;
+
     try {
       initializeDatabase(); // sync call
       setDbReady(true);
     } catch (e) {
       console.error("Database initialization failed", e);
     }
-  }, []);
+  }, [themeReady]);
+
   useEffect(() => {
     const loadTheme = async () => {
       const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
