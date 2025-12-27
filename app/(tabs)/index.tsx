@@ -1,98 +1,257 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { isHabitDoneToday, toggleHabitToday } from "@/db/habitLogs";
+import { deleteHabit, getHabits } from "@/db/habits";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { getCurrentStreak } from "@/utils/streak";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+export default function TodayScreen() {
+  const [habits, setHabits] = useState<any[]>([]);
+  const [refresh, setRefresh] = useState(0);
+  // Theme colors
+  const text = useThemeColor({}, "text");
+  const textSecondary = useThemeColor({}, "textSecondary");
+  const card = useThemeColor({}, "card");
+  const completedCard = useThemeColor({}, "completedCard");
+  const border = useThemeColor({}, "border");
+  const primary = useThemeColor({}, "primary");
+  // Router
+  const router = useRouter();
+  useFocusEffect(
+    useCallback(() => {
+      const data = getHabits();
+      setHabits(data);
+    }, [])
+  );
+  useEffect(() => {
+    const data = getHabits();
+    setHabits(data);
+  }, [refresh]);
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+  const completedCount = habits.filter((h) => isHabitDoneToday(h.id)).length;
 
-export default function HomeScreen() {
+  const onLongPressHabit = (habitId: number) => {
+    Alert.alert(
+      "Habit options",
+      "What would you like to do?",
+      [
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteHabit(habitId);
+            setRefresh((v) => v + 1);
+          },
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: text }]}>Today</Text>
+        <Text style={[styles.subtitle, { color: textSecondary }]}>{new Date().toDateString()}</Text>
+      </View>
+      {/* PROGRESS CARD */}
+      {/* <View style={[styles.progressCard, { backgroundColor: card }]}>
+        <Text style={[styles.progressTitle, { color: text }]}>Today’s Progress</Text>
+        <Text style={{ color: textSecondary }}>
+          {completedCount} of {habits.length} habits completed
+        </Text>
+      </View> */}
+      <View style={[styles.progressCard, { backgroundColor: card }]}>
+        <Text style={[styles.progressTitle, { color: text }]}>Today’s Progress</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <Text style={{ color: textSecondary, marginBottom: 8 }}>
+          {completedCount} of {habits.length} habits completed
+        </Text>
+
+        {/* Progress Bar */}
+        <View style={[styles.progressTrack, { backgroundColor: border }]}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                backgroundColor: primary,
+                width: `${habits.length === 0 ? 0 : (completedCount / habits.length) * 100}%`,
+              },
+            ]}
+          />
+        </View>
+      </View>
+
+      {/* HABIT LIST */}
+      <FlatList
+        data={habits}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        renderItem={({ item }) => {
+          const done = isHabitDoneToday(item.id);
+          const streak = getCurrentStreak(item.id);
+
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                toggleHabitToday(item.id);
+                setRefresh((v) => v + 1);
+              }}
+              onLongPress={() => onLongPressHabit(item.id)}
+              style={[
+                styles.habitCard,
+                {
+                  backgroundColor: done ? completedCard : card,
+                  borderColor: border,
+                },
+              ]}
+            >
+              {/* Checkbox */}
+              <View
+                style={[
+                  styles.checkbox,
+                  {
+                    borderColor: item.color,
+                    backgroundColor: done ? item.color : "transparent",
+                  },
+                ]}
+              />
+
+              {/* Text */}
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.habitName, { color: text }]}>{item.name}</Text>
+                <Text style={[styles.habitSub, { color: textSecondary }]}>
+                  {streak > 0 ? `🔥 ${streak} day streak` : "⏳ Start your streak today"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyTitle, { color: text }]}>No habits yet</Text>
+            <Text style={[styles.emptySub, { color: textSecondary }]}>
+              Start with one small habit today
+            </Text>
+          </View>
+        }
+      />
+      {/* FAB (Add Habit – wired later) */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: primary }]}
+        onPress={() => router.push("/habit/add")}
+      >
+        <Text style={styles.fabText}>＋</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+
+  header: {
+    marginTop: 16,
+    marginBottom: 16,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+
+  title: {
+    fontSize: 24,
+    fontWeight: "600",
+  },
+
+  subtitle: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+
+  progressCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+  },
+
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+
+  habitCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginRight: 12,
+  },
+
+  habitName: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  habitSub: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+
+  emptyState: {
+    marginTop: 80,
+    alignItems: "center",
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+
+  emptySub: {
+    fontSize: 14,
+  },
+
+  fab: {
+    position: "absolute",
+    right: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+  },
+
+  fabText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    lineHeight: 28,
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+
+  progressFill: {
+    height: "100%",
+    borderRadius: 4,
   },
 });
