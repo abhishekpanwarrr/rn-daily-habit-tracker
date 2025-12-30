@@ -51,6 +51,10 @@ export default function HabitsScreen() {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
+          paddingBottom: 6,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: "#ccc",
+          marginBottom: 16,
         }}
       >
         <View style={[styles.header, { backgroundColor: colors.background }]}>
@@ -59,6 +63,7 @@ export default function HabitsScreen() {
             Manage your habits
           </Text>
         </View>
+        {/* Add new habit button */}
         <TouchableOpacity
           style={{
             padding: 8,
@@ -73,6 +78,7 @@ export default function HabitsScreen() {
           <Ionicons name="add" color={colors.text} size={25} />
         </TouchableOpacity>
       </View>
+      {/* Tip: Tap a habit to edit. */}
       <View
         style={{
           padding: 10,

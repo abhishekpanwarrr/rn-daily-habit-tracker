@@ -1,4 +1,7 @@
 import { db } from "@/db/database";
+type HabitLogRow = {
+  completed: number; // 0 or 1
+};
 
 export function getWeeklyCompletion(habitId: number) {
   const today = new Date();
@@ -9,7 +12,7 @@ export function getWeeklyCompletion(habitId: number) {
     d.setDate(today.getDate() - i);
     const dateStr = d.toISOString().split("T")[0];
 
-    const result = db.getAllSync(
+    const result = db.getAllSync<HabitLogRow>(
       `SELECT completed FROM habit_logs WHERE habitId = ? AND date = ?`,
       [habitId, dateStr]
     );

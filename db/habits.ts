@@ -41,8 +41,6 @@ export const addHabit = (
      VALUES (?, ?, ?, ?, ?)`,
     [name, color, frequency, category, new Date().toISOString()]
   );
-  console.log("🚀 ~ addHabit ~ result:", result.changes);
-
   return result.lastInsertRowId as number;
 };
 
