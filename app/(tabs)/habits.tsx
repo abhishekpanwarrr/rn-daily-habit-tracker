@@ -3,14 +3,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HabitsScreen() {
@@ -23,28 +16,26 @@ export default function HabitsScreen() {
     }, [])
   );
 
-  const onLongPressHabit = (habitId: number) => {
-    Alert.alert(
-      "Delete habit?",
-      "This will remove the habit and all its history.",
-      [
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteHabit(habitId);
-            setHabits(getHabits());
-          },
-        },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
-  };
+  // const onLongPressHabit = (habitId: number) => {
+  //   Alert.alert(
+  //     "Delete habit?",
+  //     "This will remove the habit and all its history.",
+  //     [
+  //       {
+  //         text: "Delete",
+  //         style: "destructive",
+  //         onPress: () => {
+  //           deleteHabit(habitId);
+  //           setHabits(getHabits());
+  //         },
+  //       },
+  //       { text: "Cancel", style: "cancel" },
+  //     ]
+  //   );
+  // };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View
         style={{
@@ -59,9 +50,7 @@ export default function HabitsScreen() {
       >
         <View style={[styles.header, { backgroundColor: colors.background }]}>
           <Text style={[styles.title, { color: colors.text }]}>Habits</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Manage your habits
-          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your habits</Text>
         </View>
         {/* Add new habit button */}
         <TouchableOpacity
@@ -126,15 +115,11 @@ export default function HabitsScreen() {
               ]}
             >
               {/* Color dot */}
-              <View
-                style={[styles.colorDot, { backgroundColor: item.color }]}
-              />
+              <View style={[styles.colorDot, { backgroundColor: item.color }]} />
 
               {/* Text */}
               <View style={{ flex: 1 }}>
-                <Text style={[styles.habitName, { color: colors.text }]}>
-                  {item.name}
-                </Text>
+                <Text style={[styles.habitName, { color: colors.text }]}>{item.name}</Text>
 
                 <View
                   style={{
@@ -150,11 +135,7 @@ export default function HabitsScreen() {
               </View>
 
               {/* Edit icon */}
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={colors.textSecondary}
-              />
+              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
 
             // <TouchableOpacity
@@ -188,9 +169,7 @@ export default function HabitsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="leaf-outline" size={48} color={colors.border} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              No habits yet
-            </Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No habits yet</Text>
             <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
               Start with one habit — consistency beats intensity 🌱
             </Text>

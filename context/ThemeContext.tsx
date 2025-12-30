@@ -1,29 +1,3 @@
-// import { createContext, useContext, useState } from "react";
-// import { useColorScheme as useSystemScheme } from "react-native";
-
-// type ThemeMode = "system" | "light" | "dark";
-
-// const ThemeContext = createContext<{
-//   mode: ThemeMode;
-//   setMode: (mode: ThemeMode) => void;
-// }>({
-//   mode: "system",
-//   setMode: () => {},
-// });
-
-// export function ThemeProviderCustom({ children }: { children: React.ReactNode }) {
-//   const systemScheme = useSystemScheme();
-//   const [mode, setMode] = useState<ThemeMode>("system");
-
-//   const effectiveScheme = mode === "system" ? systemScheme : mode;
-
-//   return <ThemeContext.Provider value={{ mode, setMode }}>{children}</ThemeContext.Provider>;
-// }
-
-// export function useThemeMode() {
-//   return useContext(ThemeContext);
-// }
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
@@ -33,7 +7,7 @@ export const ThemeContext = createContext({
   toggleTheme: () => {},
 });
 
-const THEME_STORAGE_KEY = "@app_theme";
+const THEME_STORAGE_KEY = "@app_theme_habito";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemColorScheme = useColorScheme();
@@ -67,9 +41,5 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 }

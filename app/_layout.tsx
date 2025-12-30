@@ -4,7 +4,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 import "react-native-reanimated";
 import LottieView from "lottie-react-native";
 
