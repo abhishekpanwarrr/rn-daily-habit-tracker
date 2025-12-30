@@ -1,9 +1,6 @@
 import { ThemeProvider } from "@/context/ThemeContext";
 import { initializeDatabase } from "@/db/database";
 import { useTheme } from "@/hooks/useTheme";
-// import { useColorScheme } from "@/hooks/use-color-scheme";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -52,7 +49,6 @@ function RootNavigation() {
     <>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
         <Stack.Screen
           name="habit/add"
           options={{
@@ -78,8 +74,6 @@ function RootNavigation() {
             headerTitleStyle: { fontWeight: "600" },
           }}
         />
-
-        <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
       <StatusBar style={theme === "dark" ? "light" : "dark"} />
     </>

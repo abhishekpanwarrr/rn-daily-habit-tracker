@@ -38,4 +38,8 @@ export const initializeDatabase = () => {
   if (!columnNames.includes("notificationId")) {
     db.execSync(`ALTER TABLE habits ADD COLUMN notificationId TEXT;`);
   }
+
+  if (!columnNames.includes("category")) {
+    db.execSync(`ALTER TABLE habits ADD COLUMN category TEXT;`);
+  }
 };

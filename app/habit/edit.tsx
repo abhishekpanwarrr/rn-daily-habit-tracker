@@ -1,10 +1,23 @@
-import { getHabitById, updateHabit, updateHabitNotificationId } from "@/db/habits";
+import {
+  deleteHabit,
+  getHabitById,
+  updateHabit,
+  updateHabitNotificationId,
+} from "@/db/habits";
 import { useTheme } from "@/hooks/useTheme";
 import { COLORS } from "@/utils/extra";
 import { cancelReminder, scheduleDailyReminder } from "@/utils/notifications";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditHabitScreen() {
@@ -13,41 +26,66 @@ export default function EditHabitScreen() {
     id: string;
     name: string;
     color: string;
+    category: string;
   }>();
 
-  const hour = 9;
-  const minute = 0;
   const { colors } = useTheme();
+  const habitId = Number(params.id);
+  const oldHabit = getHabitById(habitId);
 
-  const [name, setName] = useState(params.name);
-  const [color, setColor] = useState(params.color);
+  const habit = getHabitById(Number(params.id));
+  const [name, setName] = useState(habit?.name ?? "");
+  const [color, setColor] = useState(habit?.color ?? COLORS[0]);
+  const [category, setCategory] = useState(habit?.category ?? "Health");
+  const [reminderEnabled, setReminderEnabled] = useState(
+    Boolean(oldHabit?.notificationId)
+  );
+  const [hour, setHour] = useState(oldHabit?.reminderHour ?? 9);
+  const [minute, setMinute] = useState(oldHabit?.reminderMinute ?? 0);
 
   const onSave = async () => {
     if (!name.trim()) return;
 
-    const oldHabit = getHabitById(Number(params.id));
+    const habitId = Number(params.id);
+    const oldHabit = getHabitById(habitId);
 
-    // ❌ cancel old reminder
+    // 1️⃣ Cancel old reminder
     if (oldHabit?.notificationId) {
       await cancelReminder(oldHabit.notificationId);
     }
 
-    // ✅ update habit name/color
-    updateHabit(Number(params.id), name.trim(), color);
+    // 2️⃣ Update habit
+    updateHabit(habitId, name.trim(), color, category);
 
-    // ✅ schedule new reminder (if enabled)
-    const newNotificationId = await scheduleDailyReminder(name.trim(), hour, minute);
+    // 3️⃣ Schedule new reminder if enabled
+    if (reminderEnabled) {
+      const notificationId = await scheduleDailyReminder(
+        name.trim(),
+        hour,
+        minute
+      );
 
-    // ✅ store new notification id
-    updateHabitNotificationId(Number(params.id), newNotificationId);
+      updateHabitNotificationId(habitId, notificationId);
+    } else {
+      updateHabitNotificationId(habitId, null);
+    }
 
     router.back();
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Habit name</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Habit name
+        </Text>
         <TextInput
           value={name}
           onChangeText={setName}
@@ -62,8 +100,15 @@ export default function EditHabitScreen() {
       </View>
 
       {/* Color */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Color
+        </Text>
 
         <ScrollView
           horizontal
@@ -88,6 +133,63 @@ export default function EditHabitScreen() {
           })}
         </ScrollView>
       </View>
+      {/* Category */}
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Category
+        </Text>
+
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          {[
+            "Health",
+            "Fitness",
+            "Study",
+            "Mindfulness",
+            "Work",
+            "Personal",
+          ].map((c) => (
+            <TouchableOpacity
+              key={c}
+              onPress={() => setCategory(c)}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 12,
+                backgroundColor:
+                  category === c ? colors.primary : colors.border,
+                marginRight: 8,
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ color: category === c ? "#fff" : colors.text }}>
+                {c}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <TouchableOpacity onPress={() => setReminderEnabled((v) => !v)}>
+          <Text style={{ color: colors.text }}>
+            {reminderEnabled ? "🔔 Daily reminder enabled" : "🔕 No reminder"}
+          </Text>
+          <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
+            {reminderEnabled
+              ? "You’ll be reminded every day"
+              : "Tap to enable reminder"}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Save */}
       <TouchableOpacity
@@ -95,6 +197,54 @@ export default function EditHabitScreen() {
         onPress={onSave}
       >
         <Text style={styles.saveText}>Save Changes</Text>
+      </TouchableOpacity>
+      <Text
+        style={{
+          marginTop: 24,
+          marginBottom: 8,
+          color: colors.textSecondary,
+          fontSize: 12,
+        }}
+      >
+        Danger zone
+      </Text>
+
+      <TouchableOpacity
+        style={{
+          marginTop: 16,
+          padding: 16,
+          borderRadius: 16,
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: "#EF4444",
+        }}
+        onPress={async () => {
+          Alert.alert(
+            "Delete habit?",
+            "This will remove the habit and all its history.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: async () => {
+                  const habit = getHabitById(Number(params.id));
+
+                  if (habit?.notificationId) {
+                    await cancelReminder(habit.notificationId);
+                  }
+
+                  deleteHabit(Number(params.id));
+                  router.back();
+                },
+              },
+            ]
+          );
+        }}
+      >
+        <Text style={{ color: "#EF4444", fontWeight: "600" }}>
+          Delete Habit
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

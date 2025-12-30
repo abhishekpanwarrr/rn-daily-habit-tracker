@@ -1,10 +1,20 @@
 import { addHabit, updateHabitNotificationId } from "@/db/habits";
 import { useTheme } from "@/hooks/useTheme";
-import { COLORS } from "@/utils/extra";
-import { requestNotificationPermission, scheduleDailyReminder } from "@/utils/notifications";
+import { CATEGORIES, COLORS } from "@/utils/extra";
+import {
+  requestNotificationPermission,
+  scheduleDailyReminder,
+} from "@/utils/notifications";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddHabitScreen() {
@@ -15,13 +25,16 @@ export default function AddHabitScreen() {
   const { colors } = useTheme();
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLORS[0]);
+  const [category, setCategory] = useState("Health");
 
   const onSave = async () => {
     if (!name.trim()) return;
 
-    const permission = reminderEnabled ? await requestNotificationPermission() : true;
+    const permission = reminderEnabled
+      ? await requestNotificationPermission()
+      : true;
 
-    const habitId = addHabit(name.trim(), color, "daily");
+    const habitId = addHabit(name.trim(), color, "daily", category);
 
     if (reminderEnabled && permission) {
       scheduleDailyReminder(name.trim(), hour, minute)
@@ -35,9 +48,18 @@ export default function AddHabitScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Habit name</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Habit name
+        </Text>
         <TextInput
           placeholder="e.g. Drink Water"
           placeholderTextColor={colors.textSecondary}
@@ -55,8 +77,15 @@ export default function AddHabitScreen() {
       </View>
 
       {/* Color Picker */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Color
+        </Text>
 
         <ScrollView
           horizontal
@@ -79,7 +108,46 @@ export default function AddHabitScreen() {
           ))}
         </ScrollView>
       </View>
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {/* Category Picker */}
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Category
+        </Text>
+
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          {CATEGORIES.map((c) => (
+            <TouchableOpacity
+              key={c}
+              onPress={() => setCategory(c)}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 12,
+                backgroundColor:
+                  category === c ? colors.primary : colors.border,
+                marginRight: 8,
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ color: category === c ? "#fff" : colors.text }}>
+                {c}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => setReminderEnabled((v) => !v)}
           style={[
@@ -94,7 +162,9 @@ export default function AddHabitScreen() {
             {reminderEnabled ? "🔔 Daily reminder enabled" : "🔕 No reminder"}
           </Text>
           <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
-            {reminderEnabled ? "You’ll be reminded daily" : "Tap to enable reminder"}
+            {reminderEnabled
+              ? "You’ll be reminded daily"
+              : "Tap to enable reminder"}
           </Text>
         </TouchableOpacity>
       </View>

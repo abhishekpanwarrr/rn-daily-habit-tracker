@@ -4,6 +4,7 @@ export type Habit = {
   id: number;
   name: string;
   color: string;
+  category: string;
   frequency: "daily" | "weekly";
   createdAt: string;
 };
@@ -32,13 +33,15 @@ export const getHabits = (): Habit[] => {
 export const addHabit = (
   name: string,
   color: string,
-  frequency: string
+  frequency: string,
+  category: string
 ): number => {
   const result = db.runSync(
-    `INSERT INTO habits (name, color, frequency, createdAt)
-     VALUES (?, ?, ?, ?)`,
-    [name, color, frequency, new Date().toISOString()]
+    `INSERT INTO habits (name, color, frequency, category, createdAt)
+     VALUES (?, ?, ?, ?, ?)`,
+    [name, color, frequency, category, new Date().toISOString()]
   );
+  console.log("🚀 ~ addHabit ~ result:", result.changes);
 
   return result.lastInsertRowId as number;
 };
@@ -55,12 +58,16 @@ export const deleteHabit = (id: number) => {
   db.runSync(`DELETE FROM habits WHERE id = ?`, [id]);
 };
 
-export const updateHabit = (id: number, name: string, color: string) => {
-  db.runSync(`UPDATE habits SET name = ?, color = ? WHERE id = ?`, [
-    name,
-    color,
-    id,
-  ]);
+export const updateHabit = (
+  id: number,
+  name: string,
+  color: string,
+  category: string
+) => {
+  db.runSync(
+    `UPDATE habits SET name = ?, color = ?, category = ? WHERE id = ?`,
+    [name, color, category, id]
+  );
 };
 
 export const updateHabitNotificationId = (

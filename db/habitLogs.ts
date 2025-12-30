@@ -4,10 +4,10 @@ import { db } from "./database";
 export const toggleHabitToday = (habitId: number) => {
   const today = getToday();
 
-  const existing = db.getFirstSync(`SELECT * FROM habit_logs WHERE habitId = ? AND date = ?`, [
-    habitId,
-    today,
-  ]);
+  const existing = db.getFirstSync(
+    `SELECT * FROM habit_logs WHERE habitId = ? AND date = ?`,
+    [habitId, today]
+  );
 
   if (existing) {
     // Toggle completed
@@ -28,10 +28,23 @@ export const toggleHabitToday = (habitId: number) => {
 export const isHabitDoneToday = (habitId: number): boolean => {
   const today = getToday();
 
-  const row = db.getFirstSync(`SELECT completed FROM habit_logs WHERE habitId = ? AND date = ?`, [
-    habitId,
-    today,
-  ]);
+  const row = db.getFirstSync(
+    `SELECT completed FROM habit_logs WHERE habitId = ? AND date = ?`,
+    [habitId, today]
+  );
 
   return row?.completed === 1;
+};
+
+export const getHabitLogsForLast7Days = (habitId: number) => {
+  return db.getAllSync(
+    `
+    SELECT date, completed
+    FROM habit_logs
+    WHERE habitId = ?
+    ORDER BY date DESC
+    LIMIT 7
+    `,
+    [habitId]
+  ) as { date: string; completed: number }[];
 };

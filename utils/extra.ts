@@ -9,3 +9,12 @@ export const COLORS = [
   "#1581BF",
   "#452829",
 ];
+
+export const CATEGORIES = [
+  "Health",
+  "Fitness",
+  "Study",
+  "Mindfulness",
+  "Work",
+  "Personal",
+];
