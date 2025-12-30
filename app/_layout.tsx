@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
+import LottieView from "lottie-react-native";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -31,7 +32,12 @@ export default function RootLayout() {
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator size="large" />
+        <LottieView
+          source={require("@/assets/loader.json")}
+          autoPlay
+          loop
+          style={{ width: 120, height: 120 }}
+        />
       </View>
     );
   }
