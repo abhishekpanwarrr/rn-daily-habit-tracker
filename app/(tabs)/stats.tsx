@@ -44,9 +44,7 @@ const Stats = () => {
         }}
       >
         <Ionicons name="stats-chart-outline" size={56} color={border} />
-        <Text style={{ color: text, fontSize: 18, marginTop: 12 }}>
-          No stats yet
-        </Text>
+        <Text style={{ color: text, fontSize: 18, marginTop: 12 }}>No stats yet</Text>
         <Text
           style={{
             color: textSecondary,
@@ -76,9 +74,7 @@ const Stats = () => {
         >
           <View style={[styles.header, { backgroundColor: background }]}>
             <Text style={[styles.title, { color: text }]}> Your Stats</Text>
-            <Text style={[styles.subtitle, { color: textSecondary }]}>
-              Check your stats
-            </Text>
+            <Text style={[styles.subtitle, { color: textSecondary }]}>Check your stats</Text>
           </View>
         </View>
         {Object.entries(grouped).map(([category, list]) => {
