@@ -7,6 +7,16 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import "react-native-reanimated";
 import LottieView from "lottie-react-native";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -22,7 +32,15 @@ export default function RootLayout() {
       console.error("Database initialization failed", e);
     }
   }, []);
+  useEffect(() => {
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log(response);
+    });
 
+    return () => {
+      responseListener.remove();
+    };
+  }, []);
   if (!dbReady) {
     return (
       <View

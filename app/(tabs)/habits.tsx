@@ -8,183 +8,187 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
-  const router = useRouter();
   const { colors } = useTheme();
+  const router = useRouter();
+
   useFocusEffect(
     useCallback(() => {
       setHabits(getHabits());
-    }, [])
+    }, []),
   );
 
-  // const onLongPressHabit = (habitId: number) => {
-  //   Alert.alert(
-  //     "Delete habit?",
-  //     "This will remove the habit and all its history.",
-  //     [
-  //       {
-  //         text: "Delete",
-  //         style: "destructive",
-  //         onPress: () => {
-  //           deleteHabit(habitId);
-  //           setHabits(getHabits());
-  //         },
-  //       },
-  //       { text: "Cancel", style: "cancel" },
-  //     ]
-  //   );
-  // };
+  const onDelete = (id: number) => {
+    Alert.alert("Delete habit?", "This will remove the habit and all its history.", [
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteHabit(id);
+          setHabits(getHabits());
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingBottom: 6,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: "#ccc",
-          marginBottom: 16,
-        }}
-      >
-        <View style={[styles.header, { backgroundColor: colors.background }]}>
-          <Text style={[styles.title, { color: colors.text }]}>Habits</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your habits</Text>
-        </View>
-        {/* Add new habit button */}
-        <TouchableOpacity
-          style={{
-            padding: 8,
-            backgroundColor: colors.card,
-            borderRadius: 50,
-            borderWidth: 1,
-            borderColor: colors.border,
-            elevation: 2,
-          }}
-          onPress={() => router.push("/habit/add")}
-        >
-          <Ionicons name="add" color={colors.text} size={25} />
-        </TouchableOpacity>
-      </View>
-      {/* Tip: Tap a habit to edit. */}
-      <View
-        style={{
-          padding: 10,
-          marginBottom: 12,
-          borderRadius: 12,
-          backgroundColor: colors.card,
-          borderWidth: 1,
-          borderColor: colors.border,
-        }}
-      >
-        <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-          Tip: Tap a habit to edit. Reordering coming soon ✨
-        </Text>
-      </View>
+      <Header onAdd={() => router.push("/habit/add")} />
 
-      {/* Habit List */}
       <FlatList
         data={habits}
+        ListHeaderComponent={<TipCard />}
         keyExtractor={(item) => item.id.toString()}
-        style={{ backgroundColor: colors.background }}
-        contentContainerStyle={{
-          backgroundColor: colors.background,
-          paddingBottom: 24,
-        }}
-        renderItem={({ item }) => {
-          return (
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "/habit/edit",
-                  params: {
-                    id: item.id.toString(),
-                    name: item.name,
-                    color: item.color,
-                    category: item.category,
-                  },
-                })
-              }
-              style={[
-                styles.habitCard,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
+        contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => (
+          <HabitItem
+            habit={item}
+            onLongPress={() => onDelete(item.id)}
+            onPress={() =>
+              router.push({
+                pathname: "/habit/edit",
+                params: {
+                  id: item.id.toString(),
+                  name: item.name,
+                  color: item.color,
+                  category: item.category,
                 },
-              ]}
-            >
-              {/* Color dot */}
-              <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-
-              {/* Text */}
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.habitName, { color: colors.text }]}>{item.name}</Text>
-
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginTop: 4,
-                  }}
-                >
-                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                    {item.category ?? "Uncategorized"}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Edit icon */}
-              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-            </TouchableOpacity>
-
-            // <TouchableOpacity
-            //   onPress={() => {
-            //     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            //     router.push({
-            //       pathname: "/habit/edit",
-            //       params: {
-            //         id: item.id.toString(),
-            //         name: item.name,
-            //         color: item.color,
-            //         category: item.category,
-            //       },
-            //     });
-            //   }}
-            //   onLongPress={() => onLongPressHabit(item.id)}
-            //   style={[
-            //     styles.habitCard,
-            //     { backgroundColor: colors.card, borderColor: colors.border },
-            //   ]}
-            // >
-            //   <View
-            //     style={[styles.colorDot, { backgroundColor: item.color }]}
-            //   />
-            //   <Text style={[styles.habitName, { color: colors.text }]}>
-            //     {item.name}
-            //   </Text>
-            // </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="leaf-outline" size={48} color={colors.border} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No habits yet</Text>
-            <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
-              Start with one habit — consistency beats intensity 🌱
-            </Text>
-          </View>
-        }
+              })
+            }
+          />
+        )}
+        ListEmptyComponent={<EmptyState />}
       />
     </SafeAreaView>
   );
 }
+
+/* -------------------- Header -------------------- */
+const Header = ({ onAdd }: { onAdd: () => void }) => {
+  const { colors } = useTheme();
+
+  return (
+    <View
+      style={[
+        styles.headerRow,
+        {
+          borderBottomColor: colors.border,
+        },
+      ]}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Habits</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your habits</Text>
+      </View>
+
+      <TouchableOpacity
+        style={[
+          styles.addButton,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
+        onPress={onAdd}
+      >
+        <Ionicons name="add" size={25} color={colors.text} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+/* -------------------- Tip Card -------------------- */
+const TipCard = () => {
+  const { colors } = useTheme();
+
+  return (
+    <View
+      style={[
+        styles.tipCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+        },
+      ]}
+    >
+      <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+        Tip: Tap a habit to edit. Longpress to delete
+      </Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 13, marginVertical: 5 }}>
+        Reordering coming soon ✨
+      </Text>
+    </View>
+  );
+};
+
+/* -------------------- Habit Item -------------------- */
+const HabitItem = ({
+  habit,
+  onPress,
+  onLongPress,
+}: {
+  habit: Habit;
+  onPress: () => void;
+  onLongPress: () => void;
+}) => {
+  const { colors } = useTheme();
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={[
+        styles.habitCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+        },
+      ]}
+    >
+      <View style={[styles.colorDot, { backgroundColor: habit.color }]} />
+
+      <View style={styles.habitTextContainer}>
+        <Text style={[styles.habitName, { color: colors.text }]}>{habit.name}</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+          {habit.category ?? "Uncategorized"}
+        </Text>
+      </View>
+
+      <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+    </TouchableOpacity>
+  );
+};
+
+/* -------------------- Empty State -------------------- */
+const EmptyState = () => {
+  const { colors } = useTheme();
+
+  return (
+    <View style={styles.emptyState}>
+      <Ionicons name="leaf-outline" size={48} color={colors.border} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No habits yet</Text>
+      <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
+        Start with one habit — consistency beats intensity 🌱
+      </Text>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
   },
+  /* Header */
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 16,
+  },
+
   header: {
     marginTop: 16,
     marginBottom: 16,
@@ -198,6 +202,26 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     marginTop: 4,
+  },
+
+  addButton: {
+    padding: 8,
+    borderRadius: 50,
+    borderWidth: 1,
+    elevation: 2,
+  },
+
+  /* Tip */
+  tipCard: {
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+
+  /* List */
+  listContent: {
+    paddingBottom: 24,
   },
 
   habitCard: {
@@ -216,11 +240,16 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
+  habitTextContainer: {
+    flex: 1,
+  },
+
   habitName: {
     fontSize: 16,
     fontWeight: "500",
   },
 
+  /* Empty */
   emptyState: {
     marginTop: 80,
     alignItems: "center",
@@ -234,23 +263,5 @@ const styles = StyleSheet.create({
 
   emptySub: {
     fontSize: 14,
-  },
-
-  fab: {
-    position: "absolute",
-    right: 24,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 4,
-  },
-
-  fabText: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    lineHeight: 28,
   },
 });

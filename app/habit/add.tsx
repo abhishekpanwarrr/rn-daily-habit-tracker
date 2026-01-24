@@ -1,13 +1,15 @@
 import { addHabit, updateHabitNotificationId } from "@/db/habits";
 import { useTheme } from "@/hooks/useTheme";
-import { CATEGORIES, COLORS } from "@/utils/extra";
-import {
-  requestNotificationPermission,
-  scheduleDailyReminder,
-} from "@/utils/notifications";
+import { COLORS } from "@/utils/extra";
+import { requestNotificationPermission } from "@/utils/notifications";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import * as Notifications from "expo-notifications";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,169 +18,171 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CategorySelector from "@/components/category/CategorySelector";
 
 export default function AddHabitScreen() {
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const hour = 9;
-  const minute = 0;
   const router = useRouter();
   const { colors } = useTheme();
+
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLORS[0]);
   const [category, setCategory] = useState("Health");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [time, setTime] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
 
   const onSave = async () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      Alert.alert("Habit name is empty!");
+      return;
+    }
 
-    const permission = reminderEnabled
-      ? await requestNotificationPermission()
-      : true;
+    const permission = reminderEnabled ? await requestNotificationPermission() : true;
 
     const habitId = addHabit(name.trim(), color, "daily", category);
 
     if (reminderEnabled && permission) {
-      scheduleDailyReminder(name.trim(), hour, minute)
-        .then((notificationId) => {
-          updateHabitNotificationId(habitId, notificationId);
-        })
-        .catch(console.warn);
+      try {
+        const trigger: Notifications.NotificationTriggerInput = {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: time.getHours(),
+          minute: time.getMinutes(),
+        };
+
+        const notificationId = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "⏰ Task Reminder",
+            body: name,
+            sound: "default",
+          },
+          trigger,
+        });
+
+        updateHabitNotificationId(habitId, notificationId);
+      } catch (e) {
+        console.warn("Notification scheduling failed:", e);
+      }
     }
 
     router.back();
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          Habit name
-        </Text>
-        <TextInput
-          placeholder="e.g. Drink Water"
-          placeholderTextColor={colors.textSecondary}
-          value={name}
-          onChangeText={setName}
-          style={[
-            styles.input,
-            {
-              color: colors.text,
-              backgroundColor: colors.background,
-            },
-          ]}
-          selectionColor={colors.primary}
+        <NameInput value={name} onChange={setName} />
+        <ColorPicker selected={color} onSelect={setColor} />
+        <CategorySelector value={category} onChange={setCategory} />
+
+        <ReminderToggle
+          enabled={reminderEnabled}
+          onToggle={() => {
+            setReminderEnabled((v) => !v);
+            setShowPicker(true);
+          }}
         />
-      </View>
 
-      {/* Color Picker */}
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          Color
-        </Text>
+        {showPicker && (
+          <DateTimePicker
+            value={time}
+            mode="time"
+            is24Hour={false}
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_, selected) => {
+              setShowPicker(false);
+              if (selected) setTime(selected);
+            }}
+          />
+        )}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.colorRow}
-        >
-          {COLORS.map((c) => (
-            <TouchableOpacity
-              key={c}
-              onPress={() => setColor(c)}
-              style={[
-                styles.colorDot,
-                {
-                  backgroundColor: c,
-                  borderWidth: color === c ? 3 : 0,
-                  borderColor: colors.primary,
-                },
-              ]}
-            />
-          ))}
-        </ScrollView>
-      </View>
-      {/* Category Picker */}
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          Category
-        </Text>
-
-        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-          {CATEGORIES.map((c) => (
-            <TouchableOpacity
-              key={c}
-              onPress={() => setCategory(c)}
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 12,
-                backgroundColor:
-                  category === c ? colors.primary : colors.border,
-                marginRight: 8,
-                marginBottom: 8,
-              }}
-            >
-              <Text style={{ color: category === c ? "#fff" : colors.text }}>
-                {c}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
         <TouchableOpacity
-          onPress={() => setReminderEnabled((v) => !v)}
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-            },
-          ]}
+          style={[styles.saveButton, { backgroundColor: colors.primary }]}
+          onPress={onSave}
         >
-          <Text style={{ color: colors.text, fontWeight: "500" }}>
-            {reminderEnabled ? "🔔 Daily reminder enabled" : "🔕 No reminder"}
-          </Text>
-          <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
-            {reminderEnabled
-              ? "You’ll be reminded daily"
-              : "Tap to enable reminder"}
-          </Text>
+          <Text style={styles.saveText}>Save Habit</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Save */}
-      <TouchableOpacity
-        style={[styles.saveButton, { backgroundColor: colors.primary }]}
-        onPress={onSave}
-      >
-        <Text style={styles.saveText}>Save Habit</Text>
-      </TouchableOpacity>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+/* -------------------- Name Input -------------------- */
+const NameInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const { colors } = useTheme();
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Text style={[styles.label, { color: colors.textSecondary }]}>Habit name</Text>
+      <TextInput
+        placeholder="e.g. Drink Water"
+        placeholderTextColor={colors.textSecondary}
+        value={value}
+        onChangeText={onChange}
+        style={[styles.input, { color: colors.text, backgroundColor: colors.background }]}
+        selectionColor={colors.primary}
+      />
+    </View>
+  );
+};
+
+/* -------------------- Color Picker -------------------- */
+const ColorPicker = ({
+  selected,
+  onSelect,
+}: {
+  selected: string;
+  onSelect: (c: string) => void;
+}) => {
+  const { colors } = useTheme();
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.colorRow}
+      >
+        {COLORS.map((c) => (
+          <TouchableOpacity
+            key={c}
+            onPress={() => onSelect(c)}
+            style={[
+              styles.colorDot,
+              {
+                backgroundColor: c,
+                borderWidth: selected === c ? 3 : 0,
+                borderColor: colors.primary,
+              },
+            ]}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+/* -------------------- Reminder Card -------------------- */
+const ReminderToggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => {
+  const { colors } = useTheme();
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity onPress={onToggle}>
+        <Text style={{ color: colors.text, fontWeight: "500" }}>
+          {enabled ? "🔔 Daily reminder enabled" : "🔕 No reminder"}
+        </Text>
+        <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
+          {enabled ? "You’ll be reminded daily" : "Tap to enable reminder"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -187,6 +191,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
+    marginTop: 4,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -218,13 +223,29 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 12,
   },
+
+  categoryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+
   saveButton: {
     marginTop: "auto",
     padding: 16,
     borderRadius: 16,
     alignItems: "center",
     elevation: 2,
+    margin: 16,
   },
+
   saveText: {
     color: "#FFFFFF",
     fontSize: 16,
