@@ -30,7 +30,7 @@ export default function AddHabitScreen() {
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [time, setTime] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const onSave = async () => {
     if (!name.trim()) {
       Alert.alert("Habit name is empty!");
@@ -84,20 +84,46 @@ export default function AddHabitScreen() {
             setShowPicker(true);
           }}
         />
-
-        {showPicker && (
-          <DateTimePicker
-            value={time}
-            mode="time"
-            is24Hour={false}
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(_, selected) => {
-              setShowPicker(false);
-              if (selected) setTime(selected);
-            }}
-          />
+        {reminderEnabled && (
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Reminder time</Text>
+            <TouchableOpacity
+              onPress={() => setShowTimePicker(true)}
+              style={[
+                styles.timeButton,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={{ color: colors.text }}>
+                ⏰ {time.getHours().toString().padStart(2, "0")}:
+                {time.getMinutes().toString().padStart(2, "0")}
+              </Text>
+            </TouchableOpacity>
+            {showPicker && showTimePicker && (
+              <DateTimePicker
+                value={time}
+                mode="time"
+                is24Hour={false}
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(_, selected) => {
+                  if (selected) setTime(selected);
+                  setShowTimePicker(false);
+                }}
+              />
+            )}
+          </View>
         )}
-
         <TouchableOpacity
           style={[styles.saveButton, { backgroundColor: colors.primary }]}
           onPress={onSave}
@@ -185,6 +211,12 @@ const ReminderToggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () 
 };
 
 const styles = StyleSheet.create({
+  timeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
   container: {
     flex: 1,
     paddingHorizontal: 16,

@@ -174,9 +174,9 @@ export default function EditHabitScreen() {
                 mode="time"
                 is24Hour={false}
                 display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(_, selected) => {
-                  setShowTimePicker(false);
+                onChange={(event, selected) => {
                   if (selected) setTime(selected);
+                  setShowTimePicker(false);
                 }}
               />
             )}
