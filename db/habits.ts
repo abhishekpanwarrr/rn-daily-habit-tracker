@@ -17,19 +17,6 @@ export const getHabits = (): Habit[] => {
   return result as Habit[];
 };
 
-/**
- * Add a new habit
- */
-// export const addHabit = (name: string, color: string, frequency: "daily" | "weekly") => {
-//   const createdAt = new Date().toISOString();
-
-//   db.runSync(
-//     `INSERT INTO habits (name, color, frequency, createdAt)
-//      VALUES (?, ?, ?, ?)`,
-//     [name, color, frequency, createdAt]
-//   );
-// };
-
 export const addHabit = (
   name: string,
   color: string,
@@ -43,13 +30,6 @@ export const addHabit = (
   );
   return result.lastInsertRowId as number;
 };
-
-/**
- * Delete habit (optional for now)
- */
-// export const deleteHabit = (id: number) => {
-//   db.runSync(`DELETE FROM habits WHERE id = ?`, [id]);
-// };
 
 export const deleteHabit = (id: number) => {
   db.runSync(`DELETE FROM habit_logs WHERE habitId = ?`, [id]);

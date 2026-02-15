@@ -31,13 +31,16 @@ export default function AddHabitScreen() {
   const [time, setTime] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
   const onSave = async () => {
     if (!name.trim()) {
       Alert.alert("Habit name is empty!");
       return;
     }
 
-    const permission = reminderEnabled ? await requestNotificationPermission() : true;
+    const permission = reminderEnabled
+      ? await requestNotificationPermission()
+      : true;
 
     const habitId = addHabit(name.trim(), color, "daily", category);
 
@@ -64,90 +67,115 @@ export default function AddHabitScreen() {
       }
     }
 
-    router.back();
+    router.dismiss();
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <NameInput value={name} onChange={setName} />
-        <ColorPicker selected={color} onSelect={setColor} />
-        <CategorySelector value={category} onChange={setCategory} />
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          showsVerticalScrollIndicator={false}
+        >
+          <NameInput value={name} onChange={setName} />
+          <ColorPicker selected={color} onSelect={setColor} />
+          <CategorySelector value={category} onChange={setCategory} />
 
-        <ReminderToggle
-          enabled={reminderEnabled}
-          onToggle={() => {
-            setReminderEnabled((v) => !v);
-            setShowPicker(true);
-          }}
-        />
-        {reminderEnabled && (
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Reminder time</Text>
-            <TouchableOpacity
-              onPress={() => setShowTimePicker(true)}
+          <ReminderToggle
+            enabled={reminderEnabled}
+            onToggle={() => {
+              setReminderEnabled((v) => !v);
+              setShowPicker(true);
+            }}
+          />
+          {reminderEnabled && (
+            <View
               style={[
-                styles.timeButton,
+                styles.card,
                 {
-                  backgroundColor: colors.background,
+                  backgroundColor: colors.card,
                   borderColor: colors.border,
                 },
               ]}
             >
-              <Text style={{ color: colors.text }}>
-                ⏰ {time.getHours().toString().padStart(2, "0")}:
-                {time.getMinutes().toString().padStart(2, "0")}
+              <Text style={[styles.label, { color: colors.textSecondary }]}>
+                Reminder time
               </Text>
-            </TouchableOpacity>
-            {showPicker && showTimePicker && (
-              <DateTimePicker
-                value={time}
-                mode="time"
-                is24Hour={false}
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(_, selected) => {
-                  if (selected) setTime(selected);
-                  setShowTimePicker(false);
-                }}
-              />
-            )}
-          </View>
-        )}
-        <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: colors.primary }]}
-          onPress={onSave}
-        >
-          <Text style={styles.saveText}>Save Habit</Text>
-        </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(true)}
+                style={[
+                  styles.timeButton,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text style={{ color: colors.text }}>
+                  ⏰ {time.getHours().toString().padStart(2, "0")}:
+                  {time.getMinutes().toString().padStart(2, "0")}
+                </Text>
+              </TouchableOpacity>
+              {showPicker && showTimePicker && (
+                <DateTimePicker
+                  value={time}
+                  mode="time"
+                  is24Hour={false}
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={(_, selected) => {
+                    if (selected) setTime(selected);
+                    setShowTimePicker(false);
+                  }}
+                />
+              )}
+            </View>
+          )}
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: colors.primary }]}
+            onPress={onSave}
+          >
+            <Text style={styles.saveText}>Save Habit</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 /* -------------------- Name Input -------------------- */
-const NameInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+const NameInput = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) => {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>Habit name</Text>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.label, { color: colors.textSecondary }]}>
+        Habit name
+      </Text>
       <TextInput
         placeholder="e.g. Drink Water"
         placeholderTextColor={colors.textSecondary}
         value={value}
         onChangeText={onChange}
-        style={[styles.input, { color: colors.text, backgroundColor: colors.background }]}
+        style={[
+          styles.input,
+          { color: colors.text, backgroundColor: colors.background },
+        ]}
         selectionColor={colors.primary}
       />
     </View>
@@ -165,7 +193,12 @@ const ColorPicker = ({
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <Text style={[styles.label, { color: colors.textSecondary }]}>Color</Text>
 
       <ScrollView
@@ -193,11 +226,22 @@ const ColorPicker = ({
 };
 
 /* -------------------- Reminder Card -------------------- */
-const ReminderToggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => {
+const ReminderToggle = ({
+  enabled,
+  onToggle,
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+}) => {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <TouchableOpacity onPress={onToggle}>
         <Text style={{ color: colors.text, fontWeight: "500" }}>
           {enabled ? "🔔 Daily reminder enabled" : "🔕 No reminder"}
